@@ -51,7 +51,7 @@ void setup() {
   Serial.println("GPS ZOE-M8Q Example(I2C)");
   oled.println("GPS ZOE-M8Q (I2C)");
   if (g_myGNSS.begin() == false) {
-    //Connect to the u-blox module using Wire port
+    // Connect to the u-blox module using Wire port
     Serial.println(F("u-blox GNSS not detected at default I2C address. Please check wiring. Freezing."));
     oled.println(F("u-blox GNSS not detected.\nCheck wiring.\nFreezing."));
     while (1);
@@ -70,7 +70,7 @@ void setup() {
   DS3231M.adjust(); // Set to library compile Date/Time
   Serial.print(F("DS3231M chip temperature is "));
   Serial.print(DS3231M.temperature() / 100.0, 1); // Value is in 100ths of a degree
-  Serial.println("\xC2\xB0C");
+  Serial.println("*C");
 }
 
 void loop() {
@@ -86,7 +86,7 @@ void loop() {
     oled.println(buff);
     Serial.println(buff);
     if (SIV > 0) {
-    // No point if there are no satellites in view
+      // No point if there are no satellites in view
       sprintf(buff, "Lat: %3.7f", (latitude / 1e7));
       oled.println(buff);
       Serial.println(buff);
@@ -113,14 +113,19 @@ void loop() {
       oled.println(buff);
       if (!TimeAdjusted) {
         // if we haven't adjusted the time, let's do so.
-        DS3231M.adjust(DateTime(g_myGNSS.getYear(), g_myGNSS.getMonth(), g_myGNSS.getDay(),
-          g_myGNSS.getHour(), g_myGNSS.getMinute(), g_myGNSS.getSecond()));
+        DS3231M.adjust(
+          DateTime(
+            g_myGNSS.getYear(), g_myGNSS.getMonth(), g_myGNSS.getDay(),
+            g_myGNSS.getHour(), g_myGNSS.getMinute(), g_myGNSS.getSecond()
+          )
+        );
         TimeAdjusted = true;
       } else {
         // Do we need to adjust the time?
         // Check for excessive difference between GNSS time and RTC time
+        DateTime now = DS3231M.now(); // get the current time from device
         if (g_myGNSS.getYear() != now.year() || g_myGNSS.getMonth() != now.month() || g_myGNSS.getDay() != now.day()
-            || g_myGNSS.getHour() != now.hour || g_myGNSS.getMinute() != now.minute) {
+            || g_myGNSS.getHour() != now.hour() || g_myGNSS.getMinute() != now.minute()) {
           Serial.print("Readjusting the RTC");
           DS3231M.adjust(DateTime(g_myGNSS.getYear(), g_myGNSS.getMonth(), g_myGNSS.getDay(), g_myGNSS.getHour(), g_myGNSS.getMinute(), g_myGNSS.getSecond()));
         }
