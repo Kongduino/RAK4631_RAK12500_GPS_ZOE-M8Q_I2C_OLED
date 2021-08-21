@@ -29,9 +29,12 @@ long g_lastTime = 0;
 
 void setup() {
   pinMode(WB_IO2, OUTPUT);
+  pinMode(WB_IO1, OUTPUT);
   digitalWrite(WB_IO2, 0);
+  digitalWrite(WB_IO1, 0);
   delay(1000);
   digitalWrite(WB_IO2, 1);
+  digitalWrite(WB_IO1, 1);
   delay(1000);
   Wire.begin();
   oled.begin(OLED_FORMAT, I2C_ADDRESS);
@@ -41,13 +44,7 @@ void setup() {
   // Initialize Serial for debug output
   time_t timeout = millis();
   Serial.begin(115200);
-  while (!Serial) {
-    if ((millis() - timeout) < 5000) {
-      delay(100);
-    } else {
-      break;
-    }
-  }
+  delay(2500);
   Serial.println("GPS ZOE-M8Q Example(I2C)");
   oled.println("GPS ZOE-M8Q (I2C)");
   if (g_myGNSS.begin() == false) {
@@ -75,6 +72,7 @@ void setup() {
 
 void loop() {
   if (millis() - g_lastTime > 10000) {
+    Serial.println("\nGetting GNSS data...");
     long latitude = g_myGNSS.getLatitude();
     long longitude = g_myGNSS.getLongitude();
     long altitude = g_myGNSS.getAltitude();
@@ -85,31 +83,29 @@ void loop() {
     sprintf(buff, "SIV: %d", SIV);
     oled.println(buff);
     Serial.println(buff);
-    if (SIV > 0) {
-      // No point if there are no satellites in view
-      sprintf(buff, "Lat: %3.7f", (latitude / 1e7));
-      oled.println(buff);
-      Serial.println(buff);
-      sprintf(buff, "Long: %3.7f", (longitude / 1e7));
-      oled.println(buff);
-      Serial.println(buff);
-      sprintf(buff, "Alt: %3.3f m", (altitude / 1e3));
-      oled.println(buff);
-      Serial.println(buff);
-      sprintf(buff, "Speed: %3.3f m/s", (speed / 1e3));
-      oled.println(buff);
-      Serial.println(buff);
-      sprintf(buff, "Heading: %3.7f", (heading / 1e5));
-      oled.println(buff);
-      Serial.println(buff);
-    }
+    // No point if there are no satellites in view
+    sprintf(buff, "Lat: %3.7f", (latitude / 1e7));
+    oled.println(buff);
+    Serial.println(buff);
+    sprintf(buff, "Long: %3.7f", (longitude / 1e7));
+    oled.println(buff);
+    Serial.println(buff);
+    sprintf(buff, "Alt: %3.3f m", (altitude / 1e3));
+    oled.println(buff);
+    Serial.println(buff);
+    sprintf(buff, "Speed: %3.3f m/s", (speed / 1e3));
+    oled.println(buff);
+    Serial.println(buff);
+    sprintf(buff, "Heading: %3.7f", (heading / 1e5));
+    oled.println(buff);
+    Serial.println(buff);
     if (g_myGNSS.getTimeValid()) {
       uint8_t hour = (g_myGNSS.getHour() + 8) % 24;
       // Adjust for HK Time
       // Warning: this only adjusts the time. Overflow will rotate back to 0
       // [this is 24-hour system remember] but it doesn't take care of the date.
       // which is fine here, but you might need to use a library to adjust properly.
-      sprintf(buff, "GPS Time: %02d:%02d:%02d HKT", hour, g_myGNSS.getMinute(), g_myGNSS.getSecond());
+      sprintf(buff, "gTime: %02d:%02d:%02d HKT", hour, g_myGNSS.getMinute(), g_myGNSS.getSecond());
       oled.println(buff);
       if (!TimeAdjusted) {
         // if we haven't adjusted the time, let's do so.
@@ -135,6 +131,6 @@ void loop() {
     char output_buffer[32];
     sprintf(output_buffer, "RTC DateTime: %04d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second());
     Serial.println(output_buffer);
+    g_lastTime = millis(); //Update the timer
   }
-  g_lastTime = millis(); //Update the timer
 }
